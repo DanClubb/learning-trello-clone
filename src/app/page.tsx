@@ -1,10 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Eye from "./_icons/Eye";
+import SlashedEye from "./_icons/SlashedEye";
 
 export default function Home() {
     const [responseMessage, setResponseMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [viewPassword, setViewPassword] = useState(false);
 
     const usernameRef = useRef<HTMLInputElement | null>(null);
     const passwordRef = useRef<HTMLInputElement | null>(null);
@@ -50,19 +53,27 @@ export default function Home() {
                     ref={usernameRef}
                     required
                 />
-                <br />
-                <label className="text-black" htmlFor="password">
+                <label className="text-black " htmlFor="password">
                     Password
                 </label>
-                <input
-                    className="bg-white p-2 rounded-lg text-black"
-                    type="password"
-                    id="password"
-                    name="password"
-                    ref={passwordRef}
-                    required
-                />
-                <br />
+                <div className="relative">
+                    <input
+                        className="w-full bg-white p-2 rounded-lg text-black"
+                        type={viewPassword ? "text" : "password"}
+                        id="password"
+                        name="password"
+                        ref={passwordRef}
+                        required
+                    />
+                    <button
+                        type="button"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-black cursor-pointer"
+                        onClick={() => setViewPassword(!viewPassword)}
+                    >
+                        {viewPassword ? <SlashedEye /> : <Eye />}
+                    </button>
+                </div>
+
                 <button className="p-2 bg-black rounded-lg" type="submit">
                     {isLoading ? "Loading..." : "Submit"}
                 </button>
