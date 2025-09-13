@@ -1,10 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { use, useRef, useState } from "react";
 import Eye from "./_icons/Eye";
 import SlashedEye from "./_icons/SlashedEye";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+    const router = useRouter();
+
     const [responseMessage, setResponseMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [viewPassword, setViewPassword] = useState(false);
@@ -33,6 +36,10 @@ export default function Home() {
 
         setResponseMessage(await res.text());
         setIsLoading(false);
+
+        if (res.ok) {
+            router.push("/dashboard");
+        }
     };
 
     return (
