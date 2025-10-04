@@ -4,8 +4,9 @@ import { getDbClient } from "@/lib/db/server";
 export async function POST(req: Request) {
     try {
         const { username, password } = await req.json();
+        // input validations
         if (!username || !password) {
-            return new Response("Missing username or password", {
+            return new Response("invalid username or password", {
                 status: 400,
             });
         }
@@ -29,12 +30,9 @@ export async function POST(req: Request) {
 
         const res = await client.query(query, values);
 
-        return new Response(
-            `Created successfully: ${JSON.stringify(res.rows[0])}`,
-            {
-                status: 200,
-            }
-        );
+        return new Response(`Created successfully: ${username}`, {
+            status: 201,
+        });
     } catch (err) {
         console.error(err);
         return new Response("Error inserting user", { status: 500 });

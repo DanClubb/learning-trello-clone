@@ -1,16 +1,20 @@
 "use client";
 
-import { use, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Eye from "../_icons/Eye";
 import SlashedEye from "../_icons/SlashedEye";
 import { useRouter } from "next/navigation";
+import Lock from "../_icons/Lock";
+import Envelope from "../_icons/Envelope";
+import Exlamation from "../_icons/Exlamation";
 
 export default function SignupLoginForm() {
     const router = useRouter();
 
-    const [responseMessage, setResponseMessage] = useState("");
+    const [isSignup, setIsSignup] = useState(true);
+    const [responseMessage, setResponseMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [viewPassword, setViewPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const usernameRef = useRef<HTMLInputElement | null>(null);
     const passwordRef = useRef<HTMLInputElement | null>(null);
@@ -22,56 +26,101 @@ export default function SignupLoginForm() {
 
         const username = (usernameRef.current as HTMLInputElement).value;
         const password = (passwordRef.current as HTMLInputElement).value;
-        console.log("Username:", username);
-        console.log("Password:", password);
 
-        const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/sign-up`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            }
-        );
+        const res = await fetch(`/api/${isSignup ? "sign-up" : "login"}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+        });
 
-        setResponseMessage(await res.text());
         setIsLoading(false);
 
         if (res.ok) {
             router.push("/dashboard");
+        } else {
+            setResponseMessage(await res.text());
         }
     };
 
     return (
         <form
             onSubmit={handleSubmit}
-            className="flex flex-col bg-slate-300 p-4 rounded-lg w-96"
+            className="flex flex-col bg-slate-200 p-4 rounded-lg w-96"
         >
-            <Label label="username" />
-            <Input name="username" ref={usernameRef} />
-            <Label label="password" />
-            <div className="relative">
-                <Input name="password" ref={passwordRef} />
+            <div className="flex bg-slate-400 rounded-lg overflow-hidden text-black">
                 <button
+                    onClick={() => {
+                        setIsSignup(true);
+                        setResponseMessage(null);
+                    }}
+                    className={`basis-1/2 py-4 cursor-pointer ${
+                        isSignup
+                            ? "bg-slate-950 text-white"
+                            : "hover:bg-slate-500"
+                    }`}
                     type="button"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-black cursor-pointer"
-                    onClick={() => setViewPassword(!viewPassword)}
                 >
-                    {viewPassword ? <SlashedEye /> : <Eye />}
+                    Sign up
+                </button>
+                <button
+                    onClick={() => {
+                        setIsSignup(false);
+                        setResponseMessage(null);
+                    }}
+                    className={`basis-1/2 py-4 cursor-pointer ${
+                        !isSignup
+                            ? "bg-slate-950 text-white"
+                            : "hover:bg-slate-500"
+                    }`}
+                    type="button"
+                >
+                    Login
                 </button>
             </div>
 
-            <button className="mt-8 p-2 bg-black rounded-lg" type="submit">
-                {isLoading ? "Loading..." : "Submit"}
+            <Label label="email" />
+            <div className="flex justify-between items-center gap-2 px-3 bg-white text-black rounded-lg">
+                <Envelope />
+                <Input name="email" ref={usernameRef} />
+            </div>
+
+            <Label label="password" />
+            <div className="flex justify-between items-center gap-3 px-2 bg-white text-black rounded-lg">
+                <Lock />
+                <Input
+                    name="password"
+                    ref={passwordRef}
+                    showPassword={showPassword}
+                />
+                <button
+                    type="button"
+                    className="cursor-pointer"
+                    onClick={() => setShowPassword(!showPassword)}
+                >
+                    {showPassword ? <SlashedEye /> : <Eye />}
+                </button>
+            </div>
+
+            <button
+                className="mt-8 p-2 bg-black rounded-lg cursor-pointer"
+                type="submit"
+                disabled={isLoading}
+            >
+                {isLoading ? "Loading..." : isSignup ? "Sign up" : "Login"}
             </button>
 
-            <div>{responseMessage}</div>
+            {responseMessage && (
+                <div className="flex gap-2 items-center mt-2 p-2 rounded-lg bg-red-200 text-red-700">
+                    <Exlamation />
+                    <p>{responseMessage}</p>
+                </div>
+            )}
         </form>
     );
 }
 
 type LabelProps = {
-    label: "username" | "password";
+    label: "email" | "password";
 };
 
 const Label = ({ label }: LabelProps) => {
@@ -83,25 +132,28 @@ const Label = ({ label }: LabelProps) => {
 };
 
 type InputProps = {
-    name: "username" | "password";
+    name: "email" | "password";
     ref: React.RefObject<HTMLInputElement | null>;
-    viewPassword?: boolean;
+    showPassword?: boolean;
 };
 
-const Input = ({ name, ref, viewPassword }: InputProps) => {
+const Input = ({ name, ref, showPassword }: InputProps) => {
+    const hidePassword = name == "password" && !showPassword;
+
     return (
         <input
-            className="w-full bg-white p-2 rounded-lg text-black"
+            className="px-0 w-full bg-white p-2 text-black"
             type={
-                name === "password"
-                    ? viewPassword
-                        ? "text"
-                        : "password"
-                    : "text"
+                name == "password"
+                    ? hidePassword
+                        ? "password"
+                        : "text"
+                    : "email"
             }
             id={name}
             name={name}
             ref={ref}
+            placeholder={`Enter your ${name}`}
             required
         />
     );
