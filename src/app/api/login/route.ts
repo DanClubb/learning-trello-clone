@@ -1,5 +1,7 @@
 import bcrypt from "bcrypt";
 import { getDbClient } from "@/lib/db/server";
+import { validateEmail } from "@/utils/validateEmail";
+import { validatePassword } from "@/utils/validatePassword";
 
 const DUMMY_HASH = bcrypt.hashSync("dummy_password_123!@#", 10);
 
@@ -12,20 +14,13 @@ export async function POST(req: Request) {
     try {
         let { email, password } = await req.json();
 
-        const safeEmail = String(email ?? "").trim();
-        const safePassword = String(password ?? "").trim();
-
         // input validations
+        const { valid: emailValid, value: safeEmail } = validateEmail(email);
+        const { valid: passwordValid, value: safePassword } =
+            validatePassword(password);
 
-        // basic pattern check
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-        const passwordRegex = /^[\x20-\x7E]{8,100}$/;
-
-        if (!emailRegex.test(safeEmail) || !passwordRegex.test(safePassword)) {
-            return new Response("Invalid email or password", {
-                status: 400,
-            });
-        }
+        if (!emailValid || !passwordValid)
+            return new Response("Invalid email or password", { status: 400 });
 
         const client = getDbClient();
 
