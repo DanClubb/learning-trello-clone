@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { getDbClient } from "@/lib/db/server";
 import { validateEmail } from "@/utils/validateEmail";
 import { validatePassword } from "@/utils/validatePassword";
+import { sendEmail } from "@/lib/email/sendEmail";
 
 // TODOS:
 // - sign up with google
@@ -11,6 +12,12 @@ import { validatePassword } from "@/utils/validatePassword";
 export async function POST(req: Request) {
     try {
         const { email, password } = await req.json();
+
+        sendEmail(
+            "danclubb18@gmail.com",
+            "test",
+            "<h1>Test with rejectUnauthorized set to true</h1>"
+        );
 
         // input validations
         const { valid: emailValid, value: safeEmail } = validateEmail(email);
@@ -46,6 +53,7 @@ export async function POST(req: Request) {
         const res = await client.query(addUser, values);
         console.log("res => ", res);
 
+        // sendEmail();
         return new Response(`Created successfully: ${safeEmail}`, {
             status: 201,
         });
