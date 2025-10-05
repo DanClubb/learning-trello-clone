@@ -22,7 +22,7 @@ export function sendEmail(recipient: string, subject: string, html: string) {
             case 0:
                 // Server says hello: 220 ready
                 if (response.startsWith("220")) {
-                    client.write("EHLO localhost\r\n");
+                    client.write(`EHLO ${process.env.SMTP_EHLO_DOMAIN}\r\n`);
                     stage = 1;
                 }
                 break;
