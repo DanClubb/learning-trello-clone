@@ -13,18 +13,10 @@ export async function POST(req: Request) {
     try {
         const { email, password } = await req.json();
 
-        sendEmail(
-            "danclubb18@gmail.com",
-            "test",
-            "<h1>Test with rejectUnauthorized set to true</h1>"
-        );
-
         // input validations
         const { valid: emailValid, value: safeEmail } = validateEmail(email);
         const { valid: passwordValid, value: safePassword } =
             validatePassword(password);
-
-        console.log("email => ", safeEmail);
 
         if (!emailValid || !passwordValid)
             return new Response("Invalid email or password", { status: 400 });
@@ -53,7 +45,18 @@ export async function POST(req: Request) {
         const res = await client.query(addUser, values);
         console.log("res => ", res);
 
-        // sendEmail();
+        const verificationLink = `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify-email?token=full-test`;
+
+        sendEmail(
+            safeEmail,
+            "test",
+            `
+            <h1>Please verify your email</h1>
+            <p>Click the button below to verify your email address:</p>
+            <a href="${verificationLink}" style="padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none;">Verify Email</a>
+            `
+        );
+
         return new Response(`Created successfully: ${safeEmail}`, {
             status: 201,
         });
