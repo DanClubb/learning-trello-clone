@@ -1,6 +1,7 @@
 import tls from "tls";
 
 export function sendEmail(recipient: string, subject: string, html: string) {
+    console.log("sendEmail does run");
     const client = tls.connect(
         {
             host: process.env.SMTP_HOST as string,
