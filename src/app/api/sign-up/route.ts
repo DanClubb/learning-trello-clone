@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
         const verificationLink = `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify-email?token=full-test`;
 
-        sendEmail(
+        await sendEmail(
             safeEmail,
             "test",
             `
