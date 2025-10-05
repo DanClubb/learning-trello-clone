@@ -9,6 +9,7 @@ const DUMMY_HASH = bcrypt.hashSync("dummy_password_123!@#", 10);
 // - track login attempts and add a timed locked after num of failed attempts
 // - check password against already compromised passwords
 // - create and send JWT token
+// - forgot/reset password flow
 
 export async function POST(req: Request) {
     try {

@@ -13,5 +13,5 @@ export function validateEmail(email: string): ValidateEmail {
         safeEmail.length >= 3 &&
         safeEmail.length <= 50 &&
         emailRegex.test(safeEmail);
-    return { valid, value: safeEmail };
+    return { valid: valid, value: safeEmail };
 }

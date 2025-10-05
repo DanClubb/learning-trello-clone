@@ -16,7 +16,7 @@ export default function SignupLoginForm() {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    const usernameRef = useRef<HTMLInputElement | null>(null);
+    const emailRef = useRef<HTMLInputElement | null>(null);
     const passwordRef = useRef<HTMLInputElement | null>(null);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -24,18 +24,18 @@ export default function SignupLoginForm() {
 
         setIsLoading(true);
 
-        const username = (usernameRef.current as HTMLInputElement).value;
+        const email = (emailRef.current as HTMLInputElement).value;
         const password = (passwordRef.current as HTMLInputElement).value;
 
         const res = await fetch(`/api/${isSignup ? "sign-up" : "login"}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ email, password }),
         });
 
         setIsLoading(false);
 
-        if (res.ok) {
+        if (res.status == 201 || res.status == 200) {
             router.push("/dashboard");
         } else {
             setResponseMessage(await res.text());
@@ -81,7 +81,7 @@ export default function SignupLoginForm() {
             <Label label="email" />
             <div className="flex justify-between items-center gap-2 px-3 bg-white text-black rounded-lg">
                 <Envelope />
-                <Input name="email" ref={usernameRef} />
+                <Input name="email" ref={emailRef} />
             </div>
 
             <Label label="password" />
@@ -111,7 +111,7 @@ export default function SignupLoginForm() {
 
             {responseMessage && (
                 <div className="flex gap-2 items-center mt-2 p-2 rounded-lg bg-red-200 text-red-700">
-                    <Exlamation />
+                    <Exlamation classes="shrink-0" />
                     <p>{responseMessage}</p>
                 </div>
             )}
@@ -154,6 +154,8 @@ const Input = ({ name, ref, showPassword }: InputProps) => {
             name={name}
             ref={ref}
             placeholder={`Enter your ${name}`}
+            min={name == "email" ? 3 : 8}
+            max={name == "email" ? 50 : 100}
             required
         />
     );
