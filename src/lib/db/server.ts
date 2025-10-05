@@ -7,10 +7,7 @@ console.log(
 
 const pool = new Pool({
     connectionString: process.env.SUPABASE_CONNECTION_STRING!,
-    ssl:
-        process.env.NODE_ENV === "production"
-            ? { rejectUnauthorized: true }
-            : { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: false },
 });
 
 export function getDbClient() {
