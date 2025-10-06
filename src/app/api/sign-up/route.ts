@@ -57,9 +57,12 @@ export async function POST(req: Request) {
             `
         );
 
-        return new Response(`Created successfully: ${safeEmail}`, {
-            status: 201,
-        });
+        return new Response(
+            `Thank you for signing up! Please check your email (${safeEmail}) inbox for a verification link to complete your registration.`,
+            {
+                status: 201,
+            }
+        );
     } catch (err) {
         console.error(err);
         return new Response("Error inserting user", { status: 500 });

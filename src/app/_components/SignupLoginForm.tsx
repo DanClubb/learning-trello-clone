@@ -7,12 +7,16 @@ import { useRouter } from "next/navigation";
 import Lock from "../_icons/Lock";
 import Envelope from "../_icons/Envelope";
 import Exlamation from "../_icons/Exlamation";
+import Tick from "../_icons/Tick";
 
 export default function SignupLoginForm() {
     const router = useRouter();
 
     const [isSignup, setIsSignup] = useState(true);
     const [responseMessage, setResponseMessage] = useState<string | null>(null);
+    const [isSuccessResponse, setIsSuccessResponse] = useState<boolean | null>(
+        null
+    );
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
@@ -35,9 +39,14 @@ export default function SignupLoginForm() {
 
         setIsLoading(false);
 
-        if (res.status == 201 || res.status == 200) {
+        if (!isSignup && res.status == 200) {
             router.push("/dashboard");
         } else {
+            if (res.status == 201) {
+                setIsSuccessResponse(true);
+            } else {
+                setIsSuccessResponse(false);
+            }
             setResponseMessage(await res.text());
         }
     };
@@ -110,8 +119,18 @@ export default function SignupLoginForm() {
             </button>
 
             {responseMessage && (
-                <div className="flex gap-2 items-center mt-2 p-2 rounded-lg bg-red-200 text-red-700">
-                    <Exlamation classes="shrink-0" />
+                <div
+                    className={`flex gap-2 items-start mt-2 p-2 rounded-lg ${
+                        isSuccessResponse
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                    }`}
+                >
+                    {isSuccessResponse ? (
+                        <Tick classes="shrink-0" />
+                    ) : (
+                        <Exlamation classes="shrink-0" />
+                    )}
                     <p>{responseMessage}</p>
                 </div>
             )}
