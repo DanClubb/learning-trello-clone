@@ -10,6 +10,7 @@ const DUMMY_HASH = bcrypt.hashSync("dummy_password_123!@#", 10);
 // - check password against already compromised passwords
 // - create and send JWT token
 // - forgot/reset password flow
+// - make email not verified a generic response message
 
 export async function POST(req: Request) {
     try {
@@ -25,10 +26,20 @@ export async function POST(req: Request) {
 
         const client = getDbClient();
 
-        const user = await client.query<{ password_hash: string }>(
-            "SELECT password_hash FROM users WHERE email = $1",
-            [safeEmail]
-        );
+        const user = await client.query<{
+            password_hash: string;
+            email_verified: boolean;
+        }>("SELECT password_hash, email_verified FROM users WHERE email = $1", [
+            safeEmail,
+        ]);
+
+        console.log("user => ", user);
+
+        if (!user?.rows[0]?.email_verified) {
+            return new Response(`Email not verified`, {
+                status: 401,
+            });
+        }
 
         const hashToCompare: string =
             user?.rows[0]?.password_hash || DUMMY_HASH;

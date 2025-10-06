@@ -3,11 +3,12 @@ import { getDbClient } from "@/lib/db/server";
 import { validateEmail } from "@/utils/validateEmail";
 import { validatePassword } from "@/utils/validatePassword";
 import { sendEmail } from "@/lib/email/sendEmail";
+import { generateToken } from "@/utils/generateToken";
 
 // TODOS:
 // - sign up with google
-// - send email for user to verify sign up email
 // - create and send JWT token
+const EMAIL_TOKEN_EXPIRY_HOURS = 24;
 
 export async function POST(req: Request) {
     try {
@@ -37,15 +38,35 @@ export async function POST(req: Request) {
         }
 
         const password_hash = await bcrypt.hash(safePassword, 10);
+        const emailVerificationTokenExpiresAt = new Date(
+            Date.now() + EMAIL_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000
+        );
+        let emailVerificationToken: string;
+
+        while (true) {
+            emailVerificationToken = generateToken();
+
+            const existingToken = await client.query(
+                "SELECT 1 FROM users WHERE email_verification_token = $1",
+                [emailVerificationToken]
+            );
+
+            if (existingToken.rowCount === 0) break;
+        }
 
         const addUser =
-            "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING *";
-        const values = [safeEmail, password_hash];
+            "INSERT INTO users (email, password_hash, email_verification_token, email_verification_token_expires_at) VALUES ($1, $2, $3, $4) RETURNING *";
+        const values = [
+            safeEmail,
+            password_hash,
+            emailVerificationToken,
+            emailVerificationTokenExpiresAt,
+        ];
 
         const res = await client.query(addUser, values);
         console.log("res => ", res);
 
-        const verificationLink = `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify-email?token=full-test`;
+        const verificationLink = `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify-email?token=${emailVerificationToken}`;
 
         await sendEmail(
             safeEmail,
