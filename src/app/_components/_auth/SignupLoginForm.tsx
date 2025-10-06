@@ -1,54 +1,68 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Eye from "../_icons/Eye";
-import SlashedEye from "../_icons/SlashedEye";
+import Eye from "../../_icons/Eye";
+import SlashedEye from "../../_icons/SlashedEye";
 import { useRouter } from "next/navigation";
-import Lock from "../_icons/Lock";
-import Envelope from "../_icons/Envelope";
-import Exlamation from "../_icons/Exlamation";
-import Tick from "../_icons/Tick";
+import Lock from "../../_icons/Lock";
+import Envelope from "../../_icons/Envelope";
+import Exlamation from "../../_icons/Exlamation";
+import Tick from "../../_icons/Tick";
+import AuthFormLabel from "./AuthFormLabel";
+import AuthFormInput from "./AuthFormInput";
+
+type FormStatus =
+    | { state: "idle" }
+    | { state: "loading" }
+    | { state: "success"; message: string }
+    | { state: "error"; message: string };
 
 export default function SignupLoginForm() {
     const router = useRouter();
 
     const [isSignup, setIsSignup] = useState(true);
-    const [responseMessage, setResponseMessage] = useState<string | null>(null);
-    const [isSuccessResponse, setIsSuccessResponse] = useState<boolean | null>(
-        null
-    );
-    const [isLoading, setIsLoading] = useState(false);
+    const [formStatus, setFormStatus] = useState<FormStatus>({ state: "idle" });
     const [showPassword, setShowPassword] = useState(false);
-
     const emailRef = useRef<HTMLInputElement | null>(null);
     const passwordRef = useRef<HTMLInputElement | null>(null);
+    const hasMessage =
+        formStatus.state === "success" || formStatus.state === "error";
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        setIsLoading(true);
-
-        const email = (emailRef.current as HTMLInputElement).value;
-        const password = (passwordRef.current as HTMLInputElement).value;
-
+    async function submitAuthForm(
+        email: string,
+        password: string,
+        isSignup: boolean
+    ): Promise<{ status: number; message: string }> {
         const res = await fetch(`/api/${isSignup ? "sign-up" : "login"}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
         });
 
-        setIsLoading(false);
+        return { status: res.status, message: await res.text() };
+    }
 
-        if (!isSignup && res.status == 200) {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        setFormStatus({ state: "loading" });
+
+        const email = (emailRef.current as HTMLInputElement).value;
+        const password = (passwordRef.current as HTMLInputElement).value;
+
+        const { status, message } = await submitAuthForm(
+            email,
+            password,
+            isSignup
+        );
+
+        if (!isSignup && status === 200) {
             router.push("/dashboard");
-        } else {
-            if (res.status == 201) {
-                setIsSuccessResponse(true);
-            } else {
-                setIsSuccessResponse(false);
-            }
-            setResponseMessage(await res.text());
+            return;
         }
+
+        if (status === 201) setFormStatus({ state: "success", message });
+        else setFormStatus({ state: "error", message });
     };
 
     return (
@@ -60,7 +74,7 @@ export default function SignupLoginForm() {
                 <button
                     onClick={() => {
                         setIsSignup(true);
-                        setResponseMessage(null);
+                        setFormStatus({ state: "idle" });
                     }}
                     className={`basis-1/2 py-4 cursor-pointer ${
                         isSignup
@@ -74,7 +88,7 @@ export default function SignupLoginForm() {
                 <button
                     onClick={() => {
                         setIsSignup(false);
-                        setResponseMessage(null);
+                        setFormStatus({ state: "idle" });
                     }}
                     className={`basis-1/2 py-4 cursor-pointer ${
                         !isSignup
@@ -87,16 +101,16 @@ export default function SignupLoginForm() {
                 </button>
             </div>
 
-            <Label label="email" />
+            <AuthFormLabel label="email" />
             <div className="flex justify-between items-center gap-2 px-3 bg-white text-black rounded-lg">
                 <Envelope />
-                <Input name="email" ref={emailRef} />
+                <AuthFormInput name="email" ref={emailRef} />
             </div>
 
-            <Label label="password" />
+            <AuthFormLabel label="password" />
             <div className="flex justify-between items-center gap-3 px-2 bg-white text-black rounded-lg">
                 <Lock />
-                <Input
+                <AuthFormInput
                     name="password"
                     ref={passwordRef}
                     showPassword={showPassword}
@@ -113,69 +127,31 @@ export default function SignupLoginForm() {
             <button
                 className="mt-8 p-2 bg-black rounded-lg cursor-pointer"
                 type="submit"
-                disabled={isLoading}
+                disabled={formStatus.state == "loading"}
             >
-                {isLoading ? "Loading..." : isSignup ? "Sign up" : "Login"}
+                {formStatus.state == "loading"
+                    ? "Loading..."
+                    : isSignup
+                    ? "Sign up"
+                    : "Login"}
             </button>
 
-            {responseMessage && (
+            {hasMessage && (
                 <div
                     className={`flex gap-2 items-start mt-2 p-2 rounded-lg ${
-                        isSuccessResponse
+                        formStatus.state == "success"
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
                     }`}
                 >
-                    {isSuccessResponse ? (
+                    {formStatus.state == "success" ? (
                         <Tick classes="shrink-0" />
                     ) : (
                         <Exlamation classes="shrink-0" />
                     )}
-                    <p>{responseMessage}</p>
+                    <p>{formStatus.message}</p>
                 </div>
             )}
         </form>
     );
 }
-
-type LabelProps = {
-    label: "email" | "password";
-};
-
-const Label = ({ label }: LabelProps) => {
-    return (
-        <label className="pt-4 pb-1 text-black capitalize" htmlFor={label}>
-            {label}
-        </label>
-    );
-};
-
-type InputProps = {
-    name: "email" | "password";
-    ref: React.RefObject<HTMLInputElement | null>;
-    showPassword?: boolean;
-};
-
-const Input = ({ name, ref, showPassword }: InputProps) => {
-    const hidePassword = name == "password" && !showPassword;
-
-    return (
-        <input
-            className="px-0 w-full bg-white p-2 text-black"
-            type={
-                name == "password"
-                    ? hidePassword
-                        ? "password"
-                        : "text"
-                    : "email"
-            }
-            id={name}
-            name={name}
-            ref={ref}
-            placeholder={`Enter your ${name}`}
-            min={name == "email" ? 3 : 8}
-            max={name == "email" ? 50 : 100}
-            required
-        />
-    );
-};

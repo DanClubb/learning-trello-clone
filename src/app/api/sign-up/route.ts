@@ -58,7 +58,7 @@ export async function POST(req: Request) {
         );
 
         return new Response(
-            `Thank you for signing up! Please check your email (${safeEmail}) inbox for a verification link to complete your registration.`,
+            `Thank you for signing up! Please check your email (${safeEmail}) for a verification link to complete your registration.`,
             {
                 status: 201,
             }

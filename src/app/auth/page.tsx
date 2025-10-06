@@ -1,4 +1,4 @@
-import SignupLoginForm from ".././_components/SignupLoginForm";
+import SignupLoginForm from "../_components/_auth/SignupLoginForm";
 
 export default function Auth() {
     return (
