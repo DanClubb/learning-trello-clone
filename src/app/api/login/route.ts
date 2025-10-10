@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { getDbClient } from "@/lib/db/server";
 import { validateEmail } from "@/utils/validateEmail";
 import { validatePassword } from "@/utils/validatePassword";
+import { generateJWT } from "@/utils/generateJWT";
 
 const DUMMY_HASH = bcrypt.hashSync("dummy_password_123!@#", 10);
 
@@ -47,6 +48,12 @@ export async function POST(req: Request) {
         const passwordMatch = await bcrypt.compare(safePassword, hashToCompare);
 
         if (passwordMatch && (user.rowCount ?? 0) > 0) {
+            const payload = {
+                sub: "1234567890",
+                name: "John Doe",
+                admin: true,
+            };
+            console.log("JWT => ", generateJWT(payload));
             return new Response(`Successfully logged in`, {
                 status: 200,
             });
